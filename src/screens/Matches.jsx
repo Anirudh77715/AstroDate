@@ -136,117 +136,10 @@ function SwipeCard({ match, onSwipe, isTop }) {
   );
 }
 
-function PremiumModal({ onClose, onUnlock }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center px-6"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.8, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.8, y: 50 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="w-full max-w-sm rounded-3xl overflow-hidden"
-        onClick={e => e.stopPropagation()}
-        style={{ background: 'linear-gradient(180deg, #1A0F3C, #0B0620)' }}
-      >
-        {/* Decorative top */}
-        <div className="relative h-32 flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #F7B731, #FF9F43, #FF6B6B)' }}
-        >
-          <div className="absolute inset-0 opacity-20"
-            style={{ background: 'radial-gradient(circle at 50% 120%, rgba(0,0,0,0.4), transparent)' }} />
-          <div className="text-center relative z-10">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="text-4xl mb-1">👑</motion.div>
-            <h3 className="text-xl font-black" style={{ color: '#0B0620' }}>Date Premium</h3>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <h4 className="text-lg font-bold text-white text-center mb-4">
-            Unlock Full Compatibility Analysis
-          </h4>
-
-          {/* Features */}
-          <div className="flex flex-col gap-3 mb-6">
-            {[
-              { icon: '✦', text: 'See detailed 36-point Guna matching' },
-              { icon: '🤖', text: 'AI-powered compatibility insights' },
-              { icon: '💬', text: 'Unlimited chat with matches' },
-              { icon: '☽', text: 'Nakshatra & Navamsha deep analysis' },
-              { icon: '🔮', text: 'Weekly cosmic forecasts for couples' },
-            ].map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.08 }}
-                className="flex items-center gap-3"
-              >
-                <span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                  style={{ background: 'rgba(247,183,49,0.15)', border: '1px solid rgba(247,183,49,0.2)' }}>
-                  {f.icon}
-                </span>
-                <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{f.text}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Price */}
-          <div className="text-center mb-4">
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="text-3xl font-black text-white">₹99</span>
-              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>/month</span>
-            </div>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-              Cancel anytime • No hidden charges
-            </p>
-          </div>
-
-          {/* CTA */}
-          <motion.button
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={onUnlock}
-            className="btn-primary w-full py-4 rounded-2xl font-bold text-base animate-pulse-glow"
-            style={{
-              background: 'linear-gradient(135deg, #F7B731, #FF9F43)',
-              color: '#0B0620',
-              boxShadow: '0 4px 25px rgba(247,183,49,0.4)',
-              border: 'none',
-              letterSpacing: '0.03em',
-            }}
-          >
-            Upgrade to Premium ✦
-          </motion.button>
-
-          <button
-            onClick={onClose}
-            className="w-full py-3 mt-2 text-sm font-medium bg-transparent border-none cursor-pointer"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            Maybe later
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 export default function Matches() {
   const navigate = useNavigate();
   const { userChart } = useApp();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showPremium, setShowPremium] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
   const [likedMatches, setLikedMatches] = useState([]);
   const [swipeAction, setSwipeAction] = useState(null);
 
@@ -264,26 +157,22 @@ export default function Matches() {
     
     if (direction === 'right') {
       setLikedMatches(prev => [...prev, match]);
-      // Check if user should see premium modal (after 2 likes)
-      if (!isPremium && likedMatches.length >= 1) {
-        setTimeout(() => setShowPremium(true), 500);
-      }
+      
+      // Auto-navigate to profile exactly once for magic experience if they want
+      // But the user requested *everything* be visible for *each* person, so 
+      // let's just let them swipe right normally or click the profile to view!
     }
 
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
       setSwipeAction(null);
     }, 300);
-  }, [isPremium, likedMatches]);
+  }, []);
 
   const handleViewProfile = () => {
     const match = matchesWithScores[currentIndex];
     if (!match) return;
-    if (!isPremium) {
-      setShowPremium(true);
-    } else {
-      navigate(`/match/${match.id}`);
-    }
+    navigate(`/match/${match.id}`);
   };
 
   if (!userChart) {
@@ -298,19 +187,6 @@ export default function Matches() {
     <div className="phone-frame min-h-screen pb-24 noise-overlay relative overflow-hidden"
       style={{ background: '#0B0620' }}
     >
-      {/* Premium Modal */}
-      <AnimatePresence>
-        {showPremium && (
-          <PremiumModal
-            onClose={() => setShowPremium(false)}
-            onUnlock={() => {
-              setIsPremium(true);
-              setShowPremium(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Header */}
       <div className="sticky top-0 z-20 px-5 pt-4 pb-3"
         style={{ background: 'rgba(11,6,32,0.95)', backdropFilter: 'blur(12px)' }}>
@@ -323,22 +199,10 @@ export default function Matches() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            {!isPremium && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowPremium(true)}
-                className="text-[11px] font-bold px-3 py-1.5 rounded-full border-none cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #F7B731, #FF9F43)', color: '#0B0620' }}>
-                👑 Premium
-              </motion.button>
-            )}
-            {isPremium && (
-              <span className="text-[11px] font-bold px-3 py-1.5 rounded-full"
-                style={{ background: 'linear-gradient(135deg, #F7B731, #FF9F43)', color: '#0B0620' }}>
-                👑 Premium
-              </span>
-            )}
+            <span className="text-[11px] font-bold px-3 py-1.5 rounded-full"
+              style={{ background: 'linear-gradient(135deg, #F7B731, #FF9F43)', color: '#0B0620' }}>
+              ✦ Free Access
+            </span>
           </div>
         </div>
       </div>
@@ -385,47 +249,50 @@ export default function Matches() {
 
       {/* Bottom Actions */}
       {!noMoreCards && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-30 px-8">
-          <div className="flex justify-center items-center gap-6">
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-[60] px-8 pointer-events-none">
+          <div className="flex justify-center items-center gap-6 pointer-events-auto">
             {/* Nope */}
             <motion.button
               whileHover={{ scale: 1.15, rotate: -5 }}
               whileTap={{ scale: 0.85 }}
-              onClick={() => handleSwipe('left', matchesWithScores[currentIndex])}
-              className="btn-action-circle w-16 h-16 rounded-full flex items-center justify-center text-2xl"
+              onClick={(e) => { e.stopPropagation(); handleSwipe('left', matchesWithScores[currentIndex]); }}
+              className="btn-action-circle w-16 h-16 rounded-full flex items-center justify-center text-2xl relative"
               style={{
                 border: '2px solid #FF6B6B',
                 background: 'rgba(255,107,107,0.1)',
                 color: '#FF6B6B',
                 boxShadow: '0 4px 20px rgba(255,107,107,0.2)',
+                zIndex: 60
               }}>✕</motion.button>
 
             {/* View Profile */}
             <motion.button
               whileHover={{ scale: 1.1, y: -3 }}
               whileTap={{ scale: 0.85 }}
-              onClick={handleViewProfile}
-              className="btn-action-circle w-12 h-12 rounded-full flex items-center justify-center text-lg"
+              onClick={(e) => { e.stopPropagation(); handleViewProfile(); }}
+              className="btn-action-circle w-12 h-12 rounded-full flex items-center justify-center text-lg relative"
               style={{
                 background: 'linear-gradient(135deg, #6C5CE7, #8B5CF6)',
                 color: 'white',
                 boxShadow: '0 4px 20px rgba(108,92,231,0.4)',
                 border: 'none',
+                zIndex: 60
               }}>
-              {isPremium ? '✦' : '🔒'}
+              ✦
             </motion.button>
 
             {/* Like */}
             <motion.button
               whileHover={{ scale: 1.15, rotate: 5 }}
               whileTap={{ scale: 0.85 }}
-              onClick={() => handleSwipe('right', matchesWithScores[currentIndex])}
-              className="btn-action-circle w-16 h-16 rounded-full flex items-center justify-center text-2xl"
+              onClick={(e) => { e.stopPropagation(); handleSwipe('right', matchesWithScores[currentIndex]); }}
+              className="btn-action-circle w-16 h-16 rounded-full flex items-center justify-center text-2xl relative"
               style={{
                 border: '2px solid #27AE60',
                 background: 'rgba(39,174,96,0.1)',
                 color: '#27AE60',
                 boxShadow: '0 4px 20px rgba(39,174,96,0.2)',
+                zIndex: 60
               }}>♡</motion.button>
           </div>
         </div>
